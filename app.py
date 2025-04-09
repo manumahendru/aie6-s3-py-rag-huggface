@@ -31,16 +31,20 @@ class RetrievalAugmentedQAPipeline:
         self.vector_db_retriever = vector_db_retriever
 
     async def arun_pipeline(self, user_query: str):
+        ## RETRIEVE CONTEXT
         context_list = self.vector_db_retriever.search_by_text(user_query, k=4)
 
         context_prompt = ""
         for context in context_list:
             context_prompt += context[0] + "\n"
 
+        ## FORMAT PROMPT
         formatted_system_prompt = system_role_prompt.create_message()
 
+        ## AUGMENT
         formatted_user_prompt = user_role_prompt.create_message(question=user_query, context=context_prompt)
 
+        ## GENERATE RESPONSE
         async def generate_response():
             async for chunk in self.llm.astream([formatted_system_prompt, formatted_user_prompt]):
                 yield chunk
@@ -50,6 +54,12 @@ class RetrievalAugmentedQAPipeline:
 text_splitter = CharacterTextSplitter()
 
 
+'''
+Processes uploaded file and returns a list of text chunks
+
+@param file: AskFileResponse
+@return texts: List[str]
+'''
 def process_file(file: AskFileResponse):
     import tempfile
     import shutil

@@ -1,0 +1,8 @@
+.dockerignore
+.env
+.vscode
+.DS_Store
+
+# MM specific
+zz*
+zz*/

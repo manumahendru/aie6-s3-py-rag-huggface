@@ -1,5 +1,5 @@
 [project]
-name = "aie5-deploypythonicrag"
+name = "aie6-deploypythonicrag"
 version = "0.1.0"
 description = "Simple Pythonic RAG App"
 readme = "README.md"
