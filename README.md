@@ -1,11 +1,12 @@
 ---
-title: DeployPythonicRAG
-emoji: 📉
-colorFrom: blue
-colorTo: purple
+title: Aie S3 A1
+emoji: ⚡
+colorFrom: indigo
+colorTo: green
 sdk: docker
 pinned: false
-license: apache-2.0
+license: openrail
+short_description: AIE6 Session 3 Activity 1
 ---
 
 # Deploying Pythonic Chat With Your Text File Application
