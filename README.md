@@ -331,10 +331,43 @@ Try uploading a text file and asking some questions!
 Upload a PDF file of the recent DeepSeek-R1 paper and ask the following questions:
 
 1. What is RL and how does it help reasoning?
+
+<div style="margin-left: 40px;">
+RL stands for Reinforcement Learning. It is a machine learning paradigm where an agent learns to make decisions by taking actions in an environment to maximize cumulative rewards. In the context of improving reasoning capabilities of language models, RL helps by allowing the model to explore and develop reasoning patterns through trial and error without relying on supervised data. This self-evolution process enables the model to generate chain-of-thought (CoT) reasoning and exhibit complex problem-solving behaviors, ultimately enhancing its reasoning performance on various tasks.
+</div>
+
 2. What is the difference between DeepSeek-R1 and DeepSeek-R1-Zero?
+
+<div style="margin-left: 40px;">
+The main differences between DeepSeek-R1 and DeepSeek-R1-Zero are as follows:
+
+1. **Capabilities**: DeepSeek-R1 currently has more advanced capabilities compared to DeepSeek-R1-Zero, especially in tasks such as function calling, multi-turn interactions, complex role-playing, and JSON output.
+
+2. **Performance**: DeepSeek-R1-Zero exhibits improvements in performance during its reinforcement learning (RL) training process, achieving a significant increase in its average pass@1 score on the AIME 2024 benchmark. However, DeepSeek-R1 is suggested to be more capable overall in certain tasks.
+
+3. **Language Mixing**: DeepSeek-R1 is optimized for Chinese and English, while DeepSeek-R1-Zero may experience language mixing issues when handling queries in languages other than these two.
+
+4. **Prompt Sensitivity**: DeepSeek-R1 is sensitive to prompts, with few-shot prompting leading to degraded performance. It is recommended to use a zero-shot setting for optimal results. The context does not specify how DeepSeek-R1-Zero responds to prompting, but it is indicated that DeepSeek-R1 has specific sensitivities.
+
+5. **Output Readability**: DeepSeek-R1-Zero often produces content that is not suitable for reading, due to issues like language mixing or lack of formatting. In contrast, cold-start data for DeepSeek-R1 is designed to be reader-friendly and includes a structured output format with a summary.
+
+6. **Self-evolution Process**: DeepSeek-R1-Zero has a self-evolution process where it improves its reasoning capabilities autonomously, starting directly from the base model without prior supervised fine-tuning. The context does not provide details on the evolution process for DeepSeek-R1.
+
+Overall, DeepSeek-R1 appears to be a more polished and capable model, while DeepSeek-R1-Zero showcases a developmental approach to enhance reasoning over time.
+</div>
+
 3. What is this paper about?
 
+<div style="margin-left: 40px;">
+I don't know the answer.
+</div>
+  
 Does this application pass your vibe check? Are there any immediate pitfalls you're noticing?
+
+<div style="margin-left: 40px;">
+No. The last question shows that the prompt should be updated to reflect that it is being given a paper. May be the paper can be summarized in one or two sentences, and the summary can be stored as part of the system prompt.
+</div>
+
 
 ## 🚧 CHALLENGE MODE 🚧
 
