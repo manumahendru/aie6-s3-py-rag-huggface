@@ -9,6 +9,109 @@ license: openrail
 short_description: AIE6 Session 3 Activity 1
 ---
 
+# RAG Application with React and FastAPI
+
+This is a Retrieval Augmented Generation (RAG) application that allows users to upload documents (PDF or TXT) and ask questions about their content. The application uses OpenAI embeddings and models to process and answer queries.
+
+## Project Structure
+
+The project is split into two main parts:
+
+- **Backend**: A FastAPI application that handles file processing, vector database operations, and AI model interactions
+- **Frontend**: A React application that provides a user interface for file upload and chat functionality
+
+## Setup and Installation
+
+### Docker (Recommended)
+
+The easiest way to run the application is using Docker:
+
+1. Make sure you have Docker installed on your system
+2. Create a `.env` file in the root directory with your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
+3. Build the Docker image:
+   ```
+   docker build -t rag-app .
+   ```
+4. Run the Docker container:
+   ```
+   docker run -p 3000:3000 -p 8000:8000 --env-file .env rag-app
+   ```
+5. Access the application at http://localhost:3000
+
+### Manual Setup
+
+#### Backend
+
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
+
+2. Create a virtual environment (optional but recommended):
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Create a `.env` file in the backend directory with your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
+
+5. Start the backend server:
+   ```
+   python run.py
+   ```
+   
+   The server will be available at http://localhost:8000.
+
+#### Frontend
+
+1. Navigate to the frontend directory:
+   ```
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Start the development server:
+   ```
+   npm start
+   ```
+   
+   The application will be available at http://localhost:3000.
+
+## Usage
+
+1. Open the application in your browser.
+2. Upload a PDF or TXT file using the upload interface.
+3. Once the file is processed, you can ask questions about its content in the chat interface.
+4. The application will provide answers based on the content of your document.
+
+## Technology Stack
+
+- **Backend**:
+  - FastAPI
+  - OpenAI API
+  - Python 3.x
+  - PyPDF2 for PDF processing
+
+- **Frontend**:
+  - React
+  - WebSockets for real-time chat
+  - CSS (no frameworks)
+
 # Deploying Pythonic Chat With Your Text File Application
 
 In today's breakout rooms, we will be following the process that you saw during the challenge.

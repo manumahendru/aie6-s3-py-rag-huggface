@@ -1,6 +1,25 @@
+# Multi-stage build for a smaller final image
+# Stage 1: Build the React frontend
+FROM node:20-slim as frontend-build
 
-# Get a distribution that has uv already installed
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copy frontend source code
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Python application with frontend static files
+FROM python:3.12-slim
+
+# Install Node.js for serving the frontend
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Add user - this is the user that will run the app
 # If you do not set user, the app will run as root (undesirable)
@@ -17,15 +36,24 @@ ENV UVICORN_WS_PROTOCOL=websockets
 # Set the working directory
 WORKDIR $HOME/app
 
-# Copy the app to the container
-COPY --chown=user . $HOME/app
+# Copy the backend code
+COPY --chown=user backend/ ./backend/
 
-# Install the dependencies
-# RUN uv sync --frozen
-RUN uv sync
+# Copy the built React app
+COPY --chown=user --from=frontend-build /app/frontend/build ./frontend/build/
 
-# Expose the port
-EXPOSE 7860
+# Install backend requirements
+RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# Run the app
-CMD ["uv", "run", "chainlit", "run", "app.py", "--host", "0.0.0.0", "--port", "7860"]
+# Install serve for the frontend
+RUN npm install -g serve
+
+# Copy the entrypoint script
+COPY --chown=user docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+# Expose ports
+EXPOSE 8000 3000
+
+# Set the entrypoint
+ENTRYPOINT ["./docker-entrypoint.sh"]
