@@ -9,6 +9,7 @@ license: openrail
 short_description: AIE6 Session 3 Activity 1
 ---
 
+
 # Deploying Pythonic Chat With Your Text File Application
 
 In today's breakout rooms, we will be following the process that you saw during the challenge.
