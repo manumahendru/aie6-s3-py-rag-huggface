@@ -7,7 +7,7 @@ sdk: docker
 pinned: false
 license: openrail
 short_description: React+FastAPI version of aie-s3-a1
-app_port: 3000
+app_port: 8000
 ---
 
 # RAG Application with React and FastAPI
