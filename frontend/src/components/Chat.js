@@ -5,7 +5,14 @@ import Message from './Message';
 
 // Get websocket URL from environment or fallback to default
 const getWsUrl = () => {
-  return process.env.REACT_APP_WS_URL || `ws://${window.location.hostname}:8000`;
+  // Use environment variable if available
+  if (process.env.REACT_APP_WS_URL) {
+    return process.env.REACT_APP_WS_URL;
+  }
+  // Otherwise, construct URL dynamically
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host; // Includes hostname and port
+  return `${protocol}//${host}`;
 };
 
 const Chat = ({ session }) => {
