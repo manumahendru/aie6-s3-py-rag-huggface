@@ -33,11 +33,11 @@ The easiest way to run the application is using Docker:
    ```
 3. Build the Docker image:
    ```
-   docker build -t rag-app .
+   docker build -t rag-app-reactfastapi .
    ```
 4. Run the Docker container:
    ```
-   docker run -p 3000:3000 -p 8000:8000 --env-file .env rag-app
+   docker run -p 3000:3000 -p 8000:8000 --env-file .env rag-app-reactfastapi
    ```
 5. Access the application at http://localhost:3000
 
