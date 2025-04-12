@@ -1,6 +1,6 @@
 # Multi-stage build for a smaller final image
 # Stage 1: Build the React frontend
-FROM node:20-slim as frontend-build
+FROM node:20-slim AS frontend-build
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -22,16 +22,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Add user - this is the user that will run the app
-# If you do not set user, the app will run as root (undesirable)
 RUN useradd -m -u 1000 user
-USER user
 
 # Set the home directory and path
 ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH        
-
+    PATH=/home/user/.local/bin:$PATH
+    
+# Set the environment variable for WebSocket
 ENV UVICORN_WS_PROTOCOL=websockets
-
 
 # Set the working directory
 WORKDIR $HOME/app
@@ -43,10 +41,15 @@ COPY --chown=user backend/ ./backend/
 COPY --chown=user --from=frontend-build /app/frontend/build ./frontend/build/
 
 # Install backend requirements
+USER root
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# Install serve for the frontend
+# Install serve globally
 RUN npm install -g serve
+
+# Switch back to non-root user
+USER user
+WORKDIR $HOME/app
 
 # Copy the entrypoint script
 COPY --chown=user docker-entrypoint.sh ./
