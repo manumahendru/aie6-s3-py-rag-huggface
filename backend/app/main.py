@@ -3,6 +3,8 @@ import tempfile
 import shutil
 from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import json
@@ -28,6 +30,71 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Determine the static files directory relative to this script
+static_files_dir = os.path.join(os.path.dirname(__file__), "static")
+
+# The React build process creates a nested 'static' folder within the build output.
+# When we copy the build output to our backend 'static' directory, the structure is:
+# backend/app/static/
+# ├── index.html
+# ├── static/
+# │   ├── css/
+# │   └── js/
+# └── ... (other files like favicon.ico)
+# Therefore, we need to mount the nested 'static' directory specifically.
+react_static_assets_dir = os.path.join(static_files_dir, "static")
+
+# Ensure the main static directory exists (optional, for safety)
+os.makedirs(static_files_dir, exist_ok=True)
+# Ensure the nested static directory exists (where CSS/JS will be) - might not be strictly necessary
+# if the Docker copy creates it, but safe to include.
+os.makedirs(react_static_assets_dir, exist_ok=True) 
+
+# Mount the nested static directory from the React build
+# Serve files like CSS, JS from 'backend/app/static/static' when requested via '/static' URL path
+app.mount("/static", StaticFiles(directory=react_static_assets_dir), name="react_static_assets")
+
+# Serve other frontend routes by returning index.html
+# index.html itself resides directly in `static_files_dir` (backend/app/static)
+@app.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    index_path = os.path.join(static_files_dir, "index.html") # Serve index.html from the root static dir
+    if not os.path.exists(index_path):
+        raise HTTPException(status_code=404, detail="index.html not found")
+    
+    # Check if the request is for the root path or explicitly for index.html
+    if full_path == "" or full_path == "index.html":
+        return FileResponse(index_path)
+
+    # Check if the path looks like an API call or a known static file type not handled by /static mount
+    # (e.g., favicon.ico, manifest.json directly in the static root)
+    api_prefixes = ['/upload', '/chat', '/query', '/docs', '/openapi.json']
+    # Files that might be directly in the static root (not under /static/)
+    root_static_files = ['favicon.ico', 'manifest.json', 'logo192.png', 'logo512.png'] # Add others if needed
+    
+    # If it's an API call, let FastAPI handle it (it should have already if defined)
+    # If it reaches here and matches an API prefix, it's likely a 404 for an undefined sub-path.
+    if any(full_path.startswith(prefix) for prefix in api_prefixes):
+         raise HTTPException(status_code=404, detail="API resource not found")
+
+    # If it's asking for a specific file in the static root (like favicon.ico)
+    if full_path in root_static_files:
+        file_path = os.path.join(static_files_dir, full_path)
+        if os.path.exists(file_path):
+            return FileResponse(file_path)
+        else:
+             raise HTTPException(status_code=404, detail=f"Static file {full_path} not found")
+
+    # If the path does *not* look like a file (no extension in the last part)
+    # or it's explicitly asking for a non-static-root file path, serve index.html for React Router.
+    # This handles paths like /dashboard, /users/123 etc.
+    if '.' not in full_path.split('/')[-1]:
+        return FileResponse(index_path)
+
+    # If it looks like a file request but wasn't handled above (e.g., /some/path/file.txt)
+    # and isn't caught by the /static mount, return 404.
+    raise HTTPException(status_code=404, detail="Resource not found")
 
 # Define prompts
 system_template = """\

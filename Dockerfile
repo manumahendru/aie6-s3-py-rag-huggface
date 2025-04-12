@@ -13,14 +13,6 @@ RUN npm run build
 # Stage 2: Python application with frontend static files
 FROM python:3.12-slim
 
-# Install Node.js for serving the frontend
-RUN apt-get update && apt-get install -y \
-    curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 # Add user - this is the user that will run the app
 RUN useradd -m -u 1000 user
 
@@ -37,15 +29,12 @@ WORKDIR $HOME/app
 # Copy the backend code
 COPY --chown=user backend/ ./backend/
 
-# Copy the built React app
-COPY --chown=user --from=frontend-build /app/frontend/build ./frontend/build/
+# Copy the built React app into the backend's static directory
+COPY --chown=user --from=frontend-build /app/frontend/build ./backend/app/static/
 
 # Install backend requirements
 USER root
 RUN pip install --no-cache-dir -r backend/requirements.txt
-
-# Install serve globally
-RUN npm install -g serve
 
 # Switch back to non-root user
 USER user
@@ -55,8 +44,8 @@ WORKDIR $HOME/app
 COPY --chown=user docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
-# Expose ports
-EXPOSE 8000 3000
+# Expose only port 8000
+EXPOSE 8000
 
 # Set the entrypoint
 ENTRYPOINT ["./docker-entrypoint.sh"]

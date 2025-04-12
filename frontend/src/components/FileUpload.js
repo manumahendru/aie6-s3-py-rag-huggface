@@ -3,7 +3,11 @@ import './FileUpload.css';
 
 // Get API URL from environment or fallback to default
 const getApiUrl = () => {
-  return process.env.REACT_APP_BACKEND_URL || '';
+  // Since frontend and backend are served from the same origin,
+  // we can use relative paths for API calls.
+  // Return an empty string, so fetch calls like `/upload` work correctly.
+  return '';
+  // return process.env.REACT_APP_BACKEND_URL || ''; // Old logic
 };
 
 const FileUpload = ({ onSessionCreated }) => {
@@ -38,7 +42,7 @@ const FileUpload = ({ onSessionCreated }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const apiUrl = `${getApiUrl()}/upload`;
+      const apiUrl = `${getApiUrl()}/upload`; // This will now correctly resolve to "/upload"
       console.log(`Uploading to: ${apiUrl}`);
 
       const response = await fetch(apiUrl, {
