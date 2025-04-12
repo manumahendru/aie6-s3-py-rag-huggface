@@ -68,6 +68,7 @@ const FileUpload = ({ onSessionCreated }) => {
     <div className="file-upload">
       <h2>Upload a Document</h2>
       <p className="upload-instruction">Upload a PDF or text file to start asking questions about it.</p>
+      <p className="upload-limit">Maximum file size: 2MB</p>
       
       <form onSubmit={handleSubmit} className="upload-form">
         <div className="file-input-container">

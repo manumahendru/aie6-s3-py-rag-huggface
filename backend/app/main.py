@@ -19,6 +19,9 @@ from app.utils.openai_utils.embedding import EmbeddingModel
 from app.utils.vectordatabase import VectorDatabase
 from app.utils.openai_utils.chatmodel import ChatOpenAI
 
+# Define max upload size (2MB)
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024
+
 # Initialize FastAPI app
 app = FastAPI()
 
@@ -172,11 +175,37 @@ async def upload_file(file: UploadFile = File(...)):
         # Create a temporary file
         suffix = f".{file.filename.split('.')[-1]}"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            # Copy uploaded file content to the temporary file
-            shutil.copyfileobj(file.file, temp_file)
             temp_file_path = temp_file.name
-        
-        # Process the file
+            current_size = 0
+            chunk_size = 65536  # 64KB
+
+            # Read file in chunks and check size
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                current_size += len(chunk)
+                if current_size > MAX_UPLOAD_SIZE:
+                    # Close and delete the incomplete temp file
+                    temp_file.close()
+                    if os.path.exists(temp_file_path):
+                        os.unlink(temp_file_path)
+                    # Ensure the upload file stream is closed
+                    await file.close()
+                    raise HTTPException(
+                        status_code=413, # Request Entity Too Large
+                        detail=f"File size exceeds the limit of {MAX_UPLOAD_SIZE // 1024 // 1024}MB"
+                    )
+                # Write chunk to temp file
+                temp_file.write(chunk)
+
+            # --- File reading finished and size is within limit --- 
+            # The temp_file is now completely written
+
+        # Ensure the upload file stream is closed after successful read
+        await file.close()
+
+        # Process the file (using the created temp_file_path)
         texts = process_file(temp_file_path, file.filename)
         
         # Create vector database and embedding model first
@@ -216,12 +245,20 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
     
     finally:
-        # Clean up the temporary file
+        # Clean up the temporary file if it still exists 
+        # (e.g., if processing failed after successful upload and size check)
         if temp_file_path and os.path.exists(temp_file_path):
             try:
                 os.unlink(temp_file_path)
             except Exception as e:
                 print(f"Error cleaning up temporary file: {e}")
+        # Ensure UploadFile is closed in case of unexpected error during read/processing
+        # Although we added closes earlier, this is an extra safeguard
+        if file and hasattr(file, 'file') and not file.file.closed:
+             try:
+                 await file.close()
+             except Exception as e:
+                 print(f"Error closing upload file in finally block: {e}")
 
 @app.websocket("/chat/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
