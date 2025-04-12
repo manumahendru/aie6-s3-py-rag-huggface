@@ -69,7 +69,8 @@ const Chat = ({ session }) => {
       }
       
       // Use the WebSocket URL from environment or default
-      const wsUrl = `${getWsUrl()}/chat/${session.session_id}`;
+      // const wsUrl = `${getWsUrl()}/chat/${session.session_id}`;
+      const wsUrl = `/chat/${session.session_id}`;
       console.log(`WebSocket URL: ${wsUrl}`);
       const ws = new WebSocket(wsUrl);
 
