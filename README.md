@@ -321,6 +321,182 @@ Why are we using User Session here? What about Python makes us need to use this?
 
 #### ✅ ANSWER #2
 
+In the context of web applications, a user's session is the set of information that a server associates with that specific user only. In our application, we save the RAG pipeline (the uploaded document's embeddings + the chat model we will use for the user's questions) in the user's session.
+The reason we need to use this when working with Python is that every time the main() method is called on a user's message submission, Python (ie, the stack we have avaliable) cannot associate that incoming message with that user's original document or its embeddings. That association has to be maintained using chainlit's session feature.
+Finally, we can't store this session information in a global variable because that would overwrite one user's session information with another users's session information - because the global variables are shared for all method calls.
+
+### On Message
+
+First, we load our chain from the user session:
+
+```python
+chain = cl.user_session.get("chain")
+```
+
+Then, we run the chain on the content of the message - and stream it to the front end - that's it!
+
+```python
+msg = cl.Message(content="")
+result = await chain.arun_pipeline(message.content)
+
+async for stream_resp in result["response"]:
+    await msg.stream_token(stream_resp)
+```
+
+### 🎉
+
+With that - you've created a Chainlit application that moves our Pythonic RAG notebook to a Chainlit application!
+
+## Deploying the Application to Hugging Face Space
+
+Due to the way the repository is created - it should be straightforward to deploy this to a Hugging Face Space!
+
+> NOTE: If you wish to go through the local deployments using `chainlit run app.py` and Docker - please feel free to do so!
+
+<details>
+    <summary>Creating a Hugging Face Space</summary>
+
+1.  Navigate to the `Spaces` tab.
+
+![image](https://i.imgur.com/aSMlX2T.png)
+
+2. Click on `Create new Space`
+
+![image](https://i.imgur.com/YaSSy5p.png)
+
+3. Create the Space by providing values in the form. Make sure you've selected "Docker" as your Space SDK.
+
+![image](https://i.imgur.com/6h9CgH6.png)
+
+</details>
+
+<details>
+    <summary>Adding this Repository to the Newly Created Space</summary>
+
+1. Collect the SSH address from the newly created Space. 
+
+![image](https://i.imgur.com/Oag0m8E.png)
+
+> NOTE: The address is the component that starts with `git@hf.co:spaces/`.
+
+2. Use the command:
+
+```bash
+git remote add hf HF_SPACE_SSH_ADDRESS_HERE
+```
+
+3. Use the command:
+
+```bash
+git pull hf main --no-rebase --allow-unrelated-histories -X ours
+```
+
+4. Use the command: 
+
+```bash 
+git add .
+```
+
+5. Use the command:
+
+```bash
+git commit -m "Deploying Pythonic RAG"
+```
+
+6. Use the command: 
+
+```bash
+git push hf main
+```
+
+7. The Space should automatically build as soon as the push is completed!
+
+> NOTE: The build will fail before you complete the following steps!
+
+</details>
+
+<details>
+    <summary>Adding OpenAI Secrets to the Space</summary>
+
+1. Navigate to your Space settings.
+
+![image](https://i.imgur.com/zh0a2By.png)
+
+2. Navigate to `Variables and secrets` on the Settings page and click `New secret`: 
+
+![image](https://i.imgur.com/g2KlZdz.png)
+
+3. In the `Name` field - input `OPENAI_API_KEY` in the `Value (private)` field, put your OpenAI API Key.
+
+![image](https://i.imgur.com/eFcZ8U3.png)
+
+4. The Space will begin rebuilding!
+
+</details>
+
+## 🎉
+
+You just deployed Pythonic RAG!
+
+Try uploading a text file and asking some questions!
+
+#### ❓ Discussion Question #1:
+
+Upload a PDF file of the recent DeepSeek-R1 paper and ask the following questions:
+
+1. What is RL and how does it help reasoning?
+
+    ✅ Answer:
+    RL stands for Reinforcement Learning. It is a machine learning paradigm where an agent learns to make decisions by taking actions in an environment to maximize cumulative rewards. In the context of improving reasoning capabilities of language models, RL helps by allowing the model to explore and develop reasoning patterns through trial and error without relying on supervised data. This self-evolution process enables the model to generate chain-of-thought (CoT) reasoning and exhibit complex problem-solving behaviors, ultimately enhancing its reasoning performance on various tasks.
+
+
+--- 
+2. What is the difference between DeepSeek-R1 and DeepSeek-R1-Zero?
+
+    ✅ Answer:
+    The main differences between DeepSeek-R1 and DeepSeek-R1-Zero are as follows:
+
+    1. **Capabilities**: DeepSeek-R1 currently has more advanced capabilities compared to DeepSeek-R1-Zero, especially in tasks such as function calling, multi-turn interactions, complex role-playing, and JSON output.
+
+    2. **Performance**: DeepSeek-R1-Zero exhibits improvements in performance during its reinforcement learning (RL) training process, achieving a significant increase in its average pass@1 score on the AIME 2024 benchmark. However, DeepSeek-R1 is suggested to be more capable overall in certain tasks.
+
+    3. **Language Mixing**: DeepSeek-R1 is optimized for Chinese and English, while DeepSeek-R1-Zero may experience language mixing issues when handling queries in languages other than these two.
+
+    4. **Prompt Sensitivity**: DeepSeek-R1 is sensitive to prompts, with few-shot prompting leading to degraded performance. It is recommended to use a zero-shot setting for optimal results. The context does not specify how DeepSeek-R1-Zero responds to prompting, but it is indicated that DeepSeek-R1 has specific sensitivities.
+
+    5. **Output Readability**: DeepSeek-R1-Zero often produces content that is not suitable for reading, due to issues like language mixing or lack of formatting. In contrast, cold-start data for DeepSeek-R1 is designed to be reader-friendly and includes a structured output format with a summary.
+
+    6. **Self-evolution Process**: DeepSeek-R1-Zero has a self-evolution process where it improves its reasoning capabilities autonomously, starting directly from the base model without prior supervised fine-tuning. The context does not provide details on the evolution process for DeepSeek-R1.
+
+    Overall, DeepSeek-R1 appears to be a more polished and capable model, while DeepSeek-R1-Zero showcases a developmental approach to enhance reasoning over time.
+
+--- 
+
+3. What is this paper about?
+
+    ✅ Answer:
+    I don't know the answer.
+  
+--- 
+  
+4. Does this application pass your vibe check? Are there any immediate pitfalls you're noticing?
+
+    ✅ Answer:
+    No. The only context that the language model has are the chunks. The model is not aware of any higher level concept of what the overall paper is about, or even the fact that this is an AI related paper at all, and not the script of a movie.
+
+    The last question shows that the prompt should be updated to reflect that it is being given a paper. May be the paper can be summarized in one or two sentences, and the summary can be stored as part of the system prompt.
+
+
+## 🚧 CHALLENGE MODE 🚧
+
+For the challenge mode, please instead create a simple FastAPI backend with a simple React (or any other JS framework) frontend.
+
+You can use the same prompt templates and RAG pipeline as we did here - but you'll need to modify the code to work with FastAPI and React.
+
+Deploy this application to Hugging Face Spaces!
+
+
+
 ### ✅ The challenge mode app has been deployed to HuggingFace:
 
 <https://huggingface.co/spaces/manmah/aie-s3-a2>
